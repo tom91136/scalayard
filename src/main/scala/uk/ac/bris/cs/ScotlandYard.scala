@@ -1,5 +1,6 @@
 package uk.ac.bris.cs
 
+import scala.collection.immutable
 import scala.collection.immutable.SortedSet
 
 object ScotlandYard extends App {
@@ -33,33 +34,46 @@ object ScotlandYard extends App {
 		def ++(): Amount = Amount(value + 1)
 		def --(): Amount = Amount(if (value == 0) 0 else value - 1)
 	}
+
 	case class Location(value: Int) extends AnyVal
 	type Graph = UndirectedGraph[Location, Transport]
 	type Tickets = Map[Ticket, Amount]
 
 
 	sealed trait Player {
-		def location(): Location
-		def tickets(): Tickets
-		def colour(): Colour
+		type M <: Move
+		def location: Location
+		def tickets: Tickets
+		def colour: Colour
+		def moveTo(move: M): this.type
 	}
 	case class MrX(location: Location, tickets: Tickets) extends Player {
 		val colour: Black.type = Black
+		override type M = MrXMove
+		override def moveTo(move: MrXMove): MrX.this.type = move match {
+			case TicketMove(colour, ticket, origin, destination) => ???
+			case DoubleMove(colour, first, second)               => ???
+		}
 	}
-	case class Detective(colour: Colour, location: Location, tickets: Tickets) extends Player
+	case class Detective(colour: Colour, location: Location, tickets: Tickets) extends Player {
+		override type M = DetectiveMove
+		override def moveTo(move: DetectiveMove): Detective.this.type = move match {
+			case TicketMove(colour, ticket, origin, destination) => ???
+		}
 
-	sealed trait Move[P <: Player] {
-		def player(): P
 	}
 
-	case class TicketMove[C <: Player](player: C,
-									   ticket: Ticket,
-									   origin: Location,
-									   destination: Location) extends Move[C]
+	sealed trait Move {def colour: Colour}
+	sealed trait MrXMove extends Move
+	sealed trait DetectiveMove extends Move
+	case class TicketMove(colour: Colour,
+						  ticket: Ticket,
+						  origin: Location,
+						  destination: Location) extends DetectiveMove with MrXMove
 
-	case class DoubleMove(player: MrX,
-						  first: TicketMove[Player],
-						  second: TicketMove[Player]) extends Move[MrX]
+	case class DoubleMove(colour: Black.type,
+						  first: TicketMove,
+						  second: TicketMove) extends MrXMove
 
 	def mkDefaultRounds(): Seq[Visibility] = Seq()
 
@@ -85,36 +99,78 @@ object ScotlandYard extends App {
 					 detectives: SortedSet[Player])
 
 	trait Board {
-		def round(): Int
-		def turn(): Colour
+		def setup: Setup
+		def round: Int
+		def currentTurn: Colour
+		def nextTurn: Colour
 		def mrXRoundVisibility: Visibility
-		def isGameOver: Boolean
 		def playerTickets(colour: Colour): Option[Tickets]
 		def playerLocation(colour: Colour): Option[Location]
-		def possibleMoves(colour: Colour): Seq[Move[Player]]
+		def possibleMoves(): Seq[Move]
 	}
 
-	case class TheBoard(setup: Setup, round: Int, turn: Colour) extends Board {
-		private val Setup(graph, rounds, mrX, detectives) = setup
-		private val everyone: SortedSet[Player]           = detectives + mrX
+	case class TheBoard(setup: Setup,
+						round: Int,
+						currentTurn: Colour) extends Board {
+		private val Setup(graph, rounds, mrX, detectives)  = setup
+		private val everyone: IndexedSeq[Player] = (detectives + mrX).toIndexedSeq
+		override def nextTurn: Colour = everyone.indexOf()
 		override def mrXRoundVisibility: Visibility = rounds(round)
-		override def isGameOver: Boolean = ???
 		override def playerTickets(colour: Colour): Option[Tickets] = everyone
-			.find {_.colour() == colour}
-			.map {_.tickets()}
+			.find {_.colour == colour}
+			.map {_.tickets}
 		override def playerLocation(colour: Colour): Option[Location] = everyone
-			.find {_.colour() == colour}
-			.map(_.location())
-		override def possibleMoves(colour: Colour): Seq[Move[Player]] = ???
+			.find {_.colour == colour}
+			.map {_.location}
+		override def possibleMoves(): Seq[Move] = ???
 	}
+
 
 	sealed trait Round
-	case class DetectiveRound(next: (Board => Move[Detective]) => Round) extends Round
-	case class MrXRound(next: (Board => Move[MrX]) => DetectiveRound) extends Round
 
-	def startGame(setup: Setup): Round = {
-		// TODO
-		???
+	sealed trait DetectiveRound extends Round
+	sealed trait MrXRound extends Round
+
+	case class DetectiveSelect(board: Board, next: (DetectiveMove) => Round) extends DetectiveRound
+	case class MrXSelect(board: Board, next: (MrXMove) => DetectiveRound) extends MrXRound
+
+	case class MrXVictory(board: Board) extends MrXRound with DetectiveRound
+	case class DetectiveVictory(board: Board) extends MrXRound with DetectiveRound
+
+
+	//	case class DetectiveRound(board: Board, next: (DetectiveMove) => Round) extends Round
+	//	case class MrXRound(board: Board, next: MrXMove => DetectiveRound) extends Round
+	//	sealed trait Victory
+	//	case class DetectiveVictory(board: Board) extends Victory
+	//	case class MrXVictory(board: Board) extends Victory
+
+	def startGame(setup: Setup): MrXRound = {
+
+		def won(board: Board): Option[MrXRound with DetectiveRound] = {
+			val winner: Option[Colour] = ??? // TODO check for winners
+			winner.collect {
+				case Black => MrXVictory(board)
+				case _     => DetectiveVictory(board)
+			}
+		}
+
+
+		def progressDetective(board: Board, move: DetectiveMove): Round = {
+			won(board) match {
+				case Some(won) => won
+				case None      => DetectiveSelect(board, progressDetective(board, _))
+			}
+		}
+
+		def progressMrX(board: Board, move: MrXMove): DetectiveRound = {
+			won(board) match {
+				case Some(won) => won
+				case None      => DetectiveSelect(board, progressDetective(board, _))
+			}
+		}
+
+		val board = TheBoard(setup, 0, Black)
+		MrXSelect(board, progressMrX(board, _))
 	}
 
 }

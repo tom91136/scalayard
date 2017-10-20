@@ -1,5 +1,7 @@
 package uk.ac.bris.cs
 
+import uk.ac.bris.cs.ScotlandYard._
+
 import scalafx.Includes._
 import scalafx.application.JFXApp
 import scalafx.scene.Scene
@@ -20,6 +22,52 @@ object Main extends JFXApp {
 	stage = new JFXApp.PrimaryStage()
 	stage.title = "test"
 	stage.scene = new Scene(root)
+
+
+	val d: Detective  = null
+	val t: TicketMove = null
+	d.moveTo(t)
+	//	d.moveTo(d)
+
+	def handleDetectiveRound(round: DetectiveRound)
+	def handleMrXRound(round: MrXSelect) = {
+		val MrXSelect(board, next) = round
+			val mvs = board.possibleMoves()
+			val move : MrXMove = ???
+
+
+
+
+			next(move) match {
+				case DetectiveSelect(board, next) =>
+				case MrXVictory(board)            =>
+				case DetectiveVictory(board)      =>
+			}
+	}
+
+	def handleMrXVictory(board: Board) = ???
+	def handleDetectiveVictory(board: Board) = ???
+
+	ScotlandYard.startGame(null) match {
+		case s@MrXSelect(_, _)       => handleMrXRound(s)
+		case MrXVictory(board)       => handleMrXVictory(board)
+		case DetectiveVictory(board) => handleDetectiveVictory(board)
+	}
+
+	ScotlandYard.startGame(null) match {
+		case MrXSelect(board, next)  => next(null: DoubleMove) match {
+			case DetectiveSelect(board, next) => next(null: DetectiveMove) match {
+				case DetectiveSelect(board, next) =>
+				case MrXSelect(board, next)       =>
+				case MrXVictory(board)            =>
+				case DetectiveVictory(board)      =>
+			}
+			case MrXVictory(board)            =>
+			case DetectiveVictory(board)      =>
+		}
+		case MrXVictory(board)       =>
+		case DetectiveVictory(board) =>
+	}
 
 
 }
