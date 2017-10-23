@@ -1,12 +1,23 @@
 package uk.ac.bris.cs
 
+import uk.ac.bris.cs.UndirectedGraph.Edge
 
-case class Edge[N, E](source: UndirectedGraph[N, E],
-					  target: UndirectedGraph[N, E],
-					  value: E)
-case class UndirectedGraph[N, E](ns: Seq[(N, E, N)]) {
-	def edges(): Seq[E] = ???
+
+class UndirectedGraph[N, E] {
+	def edges(): Seq[Edge[N,E]] = ???
 	def nodes(): Seq[N] = ???
-	def edgesFromNode(n: N): Seq[E] = ???
+	def edgesFrom(n: N): Seq[Edge[N,E]] = ???
+	def edgesTo(n: N): Seq[Edge[N,E]] = ???
+	def size = ???
+}
+
+
+object UndirectedGraph {
+
+	case class Edge[N, E](source: N, target: N, value: E)
+
+//	case class Node[N](value: N) extends AnyVal
+
 
 }
+

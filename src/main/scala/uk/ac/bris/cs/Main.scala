@@ -1,6 +1,7 @@
 package uk.ac.bris.cs
 
-import uk.ac.bris.cs.ScotlandYard._
+import uk.ac.bris.cs.scotlandyard.ScotlandYard
+import uk.ac.bris.cs.scotlandyard.ScotlandYard._
 
 import scalafx.Includes._
 import scalafx.application.JFXApp
@@ -10,6 +11,12 @@ import scalafx.scene.paint.Color
 import scalafx.scene.shape.Rectangle
 
 object Main extends JFXApp {
+
+
+
+
+
+
 
 	val root = new HBox() {
 		children = new Rectangle() {
@@ -24,15 +31,11 @@ object Main extends JFXApp {
 	stage.scene = new Scene(root)
 
 
-	val d: Detective  = null
-	val t: TicketMove = null
-	d.moveTo(t)
-	//	d.moveTo(d)
 
-	def handleDetectiveRound(round: DetectiveRound)
+	def handleDetectiveRound(round: DetectiveRound) = ???
 	def handleMrXRound(round: MrXSelect) = {
 		val MrXSelect(board, next) = round
-			val mvs = board.possibleMoves()
+			val mvs = board.computePossibleMoves()
 			val move : MrXMove = ???
 
 
