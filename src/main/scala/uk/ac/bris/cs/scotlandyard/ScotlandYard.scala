@@ -2,15 +2,25 @@ package uk.ac.bris.cs.scotlandyard
 
 import uk.ac.bris.cs.UndirectedGraph
 
-object ScotlandYard  {
+import scala.annotation.tailrec
+
+object ScotlandYard {
+
+
+	sealed trait Side
+	case object MrXSide extends Side
+	case object DetectiveSide extends Side
 
 	sealed trait Colour
-	final case object Black extends Colour
-	final case object Red extends Colour
-	final case object Green extends Colour
-	final case object Blue extends Colour
-	final case object Yellow extends Colour
-	final case object White extends Colour
+	sealed trait MrXColour extends Colour
+	sealed trait DetectiveColour extends Colour
+
+	final case object Black extends MrXColour
+	final case object Red extends DetectiveColour
+	final case object Green extends DetectiveColour
+	final case object Blue extends DetectiveColour
+	final case object Yellow extends DetectiveColour
+	final case object White extends DetectiveColour
 
 	sealed trait Transport
 	final case object Taxi extends Transport
@@ -22,7 +32,7 @@ object ScotlandYard  {
 		case Taxi        => TaxiTicket
 		case Bus         => BusTicket
 		case Underground => UndergroundTicket
-		case Boat        => SecretTicket
+		//		case Boat        => SecretTicket
 	}
 
 	sealed trait Ticket
@@ -47,7 +57,7 @@ object ScotlandYard  {
 	final case class Tickets(map: Map[Ticket, Amount]) extends AnyVal {
 		def +(t: Ticket): Tickets = Tickets(map + (t -> (map.getOrElse(t, Amount.Zero) ++)))
 		def -(t: Ticket): Tickets = Tickets(map + (t -> (map.getOrElse(t, Amount.Zero) --)))
-		def <|(t: Ticket): Boolean = map.contains(t)
+		def ∈:(t: Ticket): Boolean = map.contains(t)
 		def isEmpty: Boolean = map.isEmpty
 	}
 
@@ -62,7 +72,7 @@ object ScotlandYard  {
 	final case class MrX(location: Location, tickets: Tickets) extends Player {
 		val colour: Black.type = Black
 	}
-	final case class Detective(colour: Colour, location: Location, tickets: Tickets) extends Player
+	final case class Detective(colour: DetectiveColour, location: Location, tickets: Tickets) extends Player
 
 	sealed trait Move {def colour: Colour}
 	sealed trait MrXMove extends Move
@@ -96,17 +106,54 @@ object ScotlandYard  {
 
 	trait Board {
 		def graph: Graph
-		def round: Int
 		def rounds: Seq[Visibility]
 		def mrX: MrX
 		def detectives: Seq[Detective]
-		def currentTurn: Colour
-		def mrXRoundVisibility: Visibility
-		def mrXTravelLog : Seq[(Int, Ticket, Location)]
+		def mrXTravelLog: MrXTravelLog
+		def pendingSide: Side
 		def computePossibleMoves(): Set[Move]
 		def computeWinner(): Option[Colour]
-		def progress(move: Move): this.type
+		def progress(move: Move): Board
 	}
+
+
+	case class Row(visibility: Visibility, ticketAndLocation: Option[(Ticket, Location)])
+	case class MrXTravelLog(rows: Seq[Row], currentRound: Option[Int]) {
+
+		lazy val lastVisibleLocation: Option[Location] = {
+			// search backwards
+			@tailrec def lastShown(rs: Seq[Row]): Option[Location] = rs match {
+				case _ :+ Row(Shown, Some((_, location))) => Some(location)
+				case xs :+ Row(Hidden, _)                 => lastShown(xs)
+				case _                                    => None
+			}
+
+			lastShown(rows)
+		}
+		lazy val isFinalRound       : Boolean          = currentRound.contains(totalRounds)
+		val totalRounds: Int = rows.size
+
+
+		def log(move: MrXMove): MrXTravelLog = {
+			move match {
+				case TicketMove(_, ticket, _, dest) => log(ticket, dest)
+				case DoubleMove(_, first, second)   => log(first).log(second)
+			}
+		}
+
+		private def log(ticket: Ticket, location: Location): MrXTravelLog = {
+			// TODO bad bad bad
+			if (isFinalRound) throw new IllegalStateException("Final round")
+			val next = currentRound.map {_ + 1}.getOrElse(0)
+			val updated = rows(next).copy(ticketAndLocation = Some((ticket, location)))
+			copy(rows = rows.updated(next, updated), Some(next))
+		}
+	}
+	object MrXTravelLog {
+		def apply(visibilities: Seq[Visibility]): MrXTravelLog =
+			new MrXTravelLog(visibilities.map { v => Row(v, None) }, None)
+	}
+
 
 	sealed trait Round
 	sealed trait DetectiveRound extends Round
@@ -115,6 +162,10 @@ object ScotlandYard  {
 	final case class MrXSelect(board: Board, next: (MrXMove) => DetectiveRound) extends MrXRound
 	final case class MrXVictory(board: Board) extends MrXRound with DetectiveRound
 	final case class DetectiveVictory(board: Board) extends MrXRound with DetectiveRound
+
+
+
+
 
 
 	def startGame(initialBoard: Board): MrXRound = {
@@ -129,9 +180,9 @@ object ScotlandYard  {
 		def progressDetective(board: Board, move: DetectiveMove): Round = {
 			val next = board.progress(move)
 			won(next).getOrElse {
-				next.currentTurn match {
-					case Black => MrXSelect(board, progressMrX(board, _))
-					case _     => DetectiveSelect(board, progressDetective(board, _))
+				next.pendingSide match {
+					case MrXSide       => MrXSelect(board, progressMrX(board, _))
+					case DetectiveSide => DetectiveSelect(board, progressDetective(board, _))
 				}
 			}
 		}
