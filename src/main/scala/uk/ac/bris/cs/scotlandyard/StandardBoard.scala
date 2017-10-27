@@ -23,9 +23,7 @@ final case class StandardBoard(graph: Graph,
 				TicketMove(p.colour, TicketLookup(t), s, e),
 				TicketMove(p.colour, SecretTicket, s, e))
 			if (move.ticket ∈: p.tickets) &&
-			// FIXME broken, removes all
-			   detectives.filterNot {_ != p}
-				   .collectFirst { case Detective(_, l, _) => l == p.location }.isEmpty
+			   detectives.forall { d => d.location != move.destination }
 		} yield move
 
 		def mkMoves(p: Player): Seq[Move] = p match {

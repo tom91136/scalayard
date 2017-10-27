@@ -1,12 +1,11 @@
 package uk.ac.bris.cs.scotlandyard
 
-import java.io.InputStream
-
 import uk.ac.bris.cs.UndirectedGraph
 import uk.ac.bris.cs.UndirectedGraph.Edge
 
 import scala.annotation.tailrec
-import scala.io.Source
+import scala.io.BufferedSource
+import scala.util.Try
 
 object ScotlandYard {
 
@@ -60,8 +59,8 @@ object ScotlandYard {
 	final case class Amount(value: Int) extends AnyVal {
 		def ++ : Amount = Amount(value + 1)
 		def -- : Amount = Amount(if (value == 0) 0 else value - 1)
-		def empty : Boolean = value == 0
-		def notEmpty : Boolean = !empty
+		def empty: Boolean = value == 0
+		def notEmpty: Boolean = !empty
 	}
 	object Amount {
 		final val Zero: Amount = Amount(0)
@@ -98,8 +97,6 @@ object ScotlandYard {
 	final case class DoubleMove(colour: Black.type,
 								first: TicketMove,
 								second: TicketMove) extends MrXMove
-
-
 
 
 	trait Board {
@@ -160,25 +157,40 @@ object ScotlandYard {
 	final case class MrXVictory(board: Board) extends MrXRound with DetectiveRound
 	final case class DetectiveVictory(board: Board) extends MrXRound with DetectiveRound
 
+	type Position = (Int, Int)
 
-	def readGraph(graphStream: InputStream): Graph = {
+	def readGraph(source: BufferedSource): Try[Graph] = Try {
 		// TODO proper error handling and stuff
-		val (x :: xs) = Source.fromInputStream(graphStream, "UTF-8").getLines().toList
-		val top = x.split(" ")
-		val nodeCount = top(0).toInt
-		val edgeCount = top(1).toInt
+		val (first :: ls) = source.getLines().toList
 
-		val nodes = xs.take(nodeCount)
+		val (nodeCount, edgeCount) = first.split(" ").toList match {
+			case node :: edge :: Nil => (node.toInt, edge.toInt)
+			case bad@_               => throw new IllegalArgumentException(s"Invalid format $bad")
+		}
+
+		val nodes = ls.take(nodeCount)
 			.foldRight(UndirectedGraph(): Graph) { (l, g) => g + Location(l.toInt) }
 
-		xs.slice(nodeCount, nodeCount + edgeCount).foldRight(nodes) { (l, g) =>
+
+		ls.slice(nodeCount, nodeCount + edgeCount).foldRight(nodes) { (l, g) =>
 			val edge = l.split(" ")
 			g + Edge(
 				Location(edge(0).toInt),
 				Location(edge(1).toInt),
 				Transport.fromString(edge(2)).get)
 		}
+	}
 
+	def readMapLocations(source: BufferedSource): Try[Map[Location, Position]] = Try {
+		// TODO proper error handling and stuff
+		val (first :: ls) = source.getLines().toList
+		val posCount = first.toInt
+		ls.take(posCount)
+			.map {_.split(" ").toList}
+			.map {
+				case l :: x :: y :: Nil => (Location(l.toInt), (x.toInt, y.toInt))
+				case bad@_              => throw new IllegalArgumentException(s"Invalid format $bad")
+			}.toMap
 	}
 
 

@@ -1,29 +1,28 @@
 package uk.ac.bris.cs
 
-import uk.ac.bris.cs.scotlandyard.{ScotlandYard, StandardBoard, StandardGame}
+import net.kurobako.gesturefx.GesturePane
+import uk.ac.bris.cs.scotlandyard.{BoardPane, ScotlandYard, StandardBoard, StandardGame}
 import uk.ac.bris.cs.scotlandyard.ScotlandYard._
 
+import scala.io.Source
 import scalafx.Includes._
 import scalafx.application.JFXApp
+import scalafx.beans.property.ReadOnlyDoubleProperty
 import scalafx.scene.Scene
-import scalafx.scene.layout.HBox
+import scalafx.scene.image.{Image, ImageView}
+import scalafx.scene.layout.{HBox, Pane, Region}
 import scalafx.scene.paint.Color
 import scalafx.scene.shape.Rectangle
 
 object Main extends JFXApp {
 
 
-	val root = new HBox() {
-		children = new Rectangle() {
-			width = 200
-			height = 200
-			fill = Color.Red
-		}
-	}
+	private final val Map         : Image                     = new Image("map.png", false)
+	private final val Graph       : Graph                     = readGraph(Source.fromResource("graph.txt")).get
+	private final val MapLocations: Map[Location, (Int, Int)] = readMapLocations(Source.fromResource("pos.txt")).get
 
-	stage = new JFXApp.PrimaryStage()
-	stage.title = "test"
-	stage.scene = new Scene(root)
+
+	val board = new BoardPane(Map, MapLocations)
 
 
 	def handleRound(round: Round) = {
@@ -35,13 +34,18 @@ object Main extends JFXApp {
 		}
 	}
 
-
-	val r = ScotlandYard.startGame(StandardBoard(readGraph(getClass.getResourceAsStream("/graph.txt")),
-		StandardGame.Rounds,
-		MrX(Location(14), StandardGame.mkDefaultMrXTickets()),
-		Detective(Red, Location(26), StandardGame.mkDefaultDetectiveTickets()) :: Nil
+	val r = ScotlandYard.startGame(StandardBoard(
+		graph = Graph,
+		rounds = StandardGame.Rounds,
+		mrX = MrX(Location(14), StandardGame.mkDefaultMrXTickets()),
+		detectives = Detective(Red, Location(26), StandardGame.mkDefaultDetectiveTickets()) :: Nil
 	))
 
 	handleRound(r)
+
+
+	stage = new JFXApp.PrimaryStage()
+	stage.title = "ScalaYard"
+	stage.scene = new Scene(new GesturePane(board), 800, 600)
 
 }
