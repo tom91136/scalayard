@@ -6,7 +6,6 @@ import uk.ac.bris.cs.scotlandyard.ScotlandYard._
 import scala.collection.breakOut
 
 final case class StandardBoard(graph: Graph,
-							   rounds: Seq[Visibility],
 							   mrX: MrX,
 							   detectives: Seq[Detective],
 							   mrXTravelLog: MrXTravelLog,
@@ -24,11 +23,15 @@ final case class StandardBoard(graph: Graph,
 				TicketMove(p.colour, TicketLookup(t), s, e),
 				TicketMove(p.colour, SecretTicket, s, e))
 			if (move.ticket ∈: p.tickets) &&
-			   detectives.collectFirst { case Detective(_, l, _) => l == p.location }.isEmpty
+			// FIXME broken, removes all
+			   detectives.filterNot {_ != p}
+				   .collectFirst { case Detective(_, l, _) => l == p.location }.isEmpty
 		} yield move
 
 		def mkMoves(p: Player): Seq[Move] = p match {
-			case detective@Detective(_, location, _) => mkMovesFrom(location, detective)
+			case detective@Detective(_, location, _) =>
+				val x = mkMovesFrom(location, detective)
+				x
 			case mrX@MrX(location, _)                =>
 				for {
 					first <- mkMovesFrom(location, mrX)
@@ -96,6 +99,10 @@ final case class StandardBoard(graph: Graph,
 				)
 		}
 	}
+	override def toString = s"StandardBoard(" +
+							s"\nplayers=$everyone, " +
+							s"\ntravelLog=$mrXTravelLog, " +
+							s"\npending=$pendingColours)"
 }
 object StandardBoard {
 
@@ -104,10 +111,9 @@ object StandardBoard {
 			  mrX: MrX,
 			  detectives: Seq[Detective]): StandardBoard = new StandardBoard(
 		graph = graph,
-		rounds = rounds,
 		mrX = mrX,
 		detectives = detectives,
-		mrXTravelLog = MrXTravelLog(Nil),
+		mrXTravelLog = MrXTravelLog(rounds),
 		pendingColours = Set(Black))
 
 }

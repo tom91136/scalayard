@@ -1,6 +1,6 @@
 package uk.ac.bris.cs
 
-import uk.ac.bris.cs.scotlandyard.{ScotlandYard, StandardBoard}
+import uk.ac.bris.cs.scotlandyard.{ScotlandYard, StandardBoard, StandardGame}
 import uk.ac.bris.cs.scotlandyard.ScotlandYard._
 
 import scalafx.Includes._
@@ -26,32 +26,22 @@ object Main extends JFXApp {
 	stage.scene = new Scene(root)
 
 
-	def handleDetectiveRound(round: DetectiveRound) = ???
-	def handleMrXRound(round: MrXSelect) = {
-		val MrXSelect(board, next) = round
-		val mvs = board.computePossibleMoves()
-		val move: MrXMove = ???
-
-
-		next(move) match {
-			case DetectiveSelect(board, next) =>
-			case MrXVictory(board)            =>
-			case DetectiveVictory(board)      =>
+	def handleRound(round: Round) = {
+		round match {
+			case MrXSelect(board, next)       => println(s"MrX select, $board => ${board.computePossibleMoves().size}")
+			case DetectiveSelect(board, next) => println(s"Detective select, $board => ${board.computePossibleMoves().size}")
+			case MrXVictory(board)            => println(s"MrX Won, $board")
+			case DetectiveVictory(board)      => println(s"Detective  Won, $board")
 		}
 	}
 
-	def handleMrXVictory(board: Board) = ???
-	def handleDetectiveVictory(board: Board) = ???
 
+	val r = ScotlandYard.startGame(StandardBoard(readGraph(getClass.getResourceAsStream("/graph.txt")),
+		StandardGame.Rounds,
+		MrX(Location(14), StandardGame.mkDefaultMrXTickets()),
+		Detective(Red, Location(26), StandardGame.mkDefaultDetectiveTickets()) :: Nil
+	))
 
-	ScotlandYard.startGame(StandardBoard(null,
-		mkDefaultRounds(),
-		MrX(Location(14), mkDefaultMrXTickets()),
-		Detective(Red, Location(14), mkDefaultDetectiveTickets()) :: Nil
-	)) match {
-		case s@MrXSelect(_, _)       => handleMrXRound(s)
-		case MrXVictory(board)       => handleMrXVictory(board)
-		case DetectiveVictory(board) => handleDetectiveVictory(board)
-	}
+	handleRound(r)
 
 }

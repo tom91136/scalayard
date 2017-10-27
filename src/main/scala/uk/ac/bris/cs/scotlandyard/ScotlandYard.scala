@@ -1,8 +1,12 @@
 package uk.ac.bris.cs.scotlandyard
 
+import java.io.InputStream
+
 import uk.ac.bris.cs.UndirectedGraph
+import uk.ac.bris.cs.UndirectedGraph.Edge
 
 import scala.annotation.tailrec
+import scala.io.Source
 
 object ScotlandYard {
 
@@ -28,6 +32,13 @@ object ScotlandYard {
 	final case object Underground extends Transport
 	final case object Boat extends Transport
 
+	object Transport {
+		final              val Transports = Seq(Taxi, Bus, Underground, Boat)
+		// we need proper enums
+		private final lazy val Names      = Transports.map { s => (s.toString, s) }.toMap
+		def fromString(transport: String): Option[Transport] = Names.get(transport)
+	}
+
 	final val TicketLookup: PartialFunction[Transport, Ticket] = {
 		case Taxi        => TaxiTicket
 		case Bus         => BusTicket
@@ -49,6 +60,8 @@ object ScotlandYard {
 	final case class Amount(value: Int) extends AnyVal {
 		def ++ : Amount = Amount(value + 1)
 		def -- : Amount = Amount(if (value == 0) 0 else value - 1)
+		def empty : Boolean = value == 0
+		def notEmpty : Boolean = !empty
 	}
 	object Amount {
 		final val Zero: Amount = Amount(0)
@@ -57,7 +70,7 @@ object ScotlandYard {
 	final case class Tickets(map: Map[Ticket, Amount]) extends AnyVal {
 		def +(t: Ticket): Tickets = Tickets(map + (t -> (map.getOrElse(t, Amount.Zero) ++)))
 		def -(t: Ticket): Tickets = Tickets(map + (t -> (map.getOrElse(t, Amount.Zero) --)))
-		def ∈:(t: Ticket): Boolean = map.contains(t)
+		def ∈:(t: Ticket): Boolean = map.get(t).exists(_.notEmpty)
 		def isEmpty: Boolean = map.isEmpty
 	}
 
@@ -86,27 +99,11 @@ object ScotlandYard {
 								first: TicketMove,
 								second: TicketMove) extends MrXMove
 
-	def mkDefaultRounds(): Seq[Visibility] = Seq()
 
-	def mkDefaultDetectiveTickets(): Tickets = Tickets(Map(
-		TaxiTicket -> Amount(1),
-		BusTicket -> Amount(1),
-		UndergroundTicket -> Amount(1),
-		SecretTicket -> Amount(1),
-		DoubleTicket -> Amount(1),
-	))
 
-	def mkDefaultMrXTickets(): Tickets = Tickets(Map(
-		TaxiTicket -> Amount(1),
-		BusTicket -> Amount(1),
-		UndergroundTicket -> Amount(1),
-		SecretTicket -> Amount(1),
-		DoubleTicket -> Amount(1),
-	))
 
 	trait Board {
 		def graph: Graph
-		def rounds: Seq[Visibility]
 		def mrX: MrX
 		def detectives: Seq[Detective]
 		def mrXTravelLog: MrXTravelLog
@@ -123,8 +120,8 @@ object ScotlandYard {
 		lazy val lastVisibleLocation: Option[Location] = {
 			// search backwards
 			@tailrec def lastShown(rs: Seq[Row]): Option[Location] = rs match {
-				case _ :+ Row(Shown, Some((_, location))) => Some(location)
 				case xs :+ Row(Hidden, _)                 => lastShown(xs)
+				case _ :+ Row(Shown, Some((_, location))) => Some(location)
 				case _                                    => None
 			}
 
@@ -164,8 +161,25 @@ object ScotlandYard {
 	final case class DetectiveVictory(board: Board) extends MrXRound with DetectiveRound
 
 
+	def readGraph(graphStream: InputStream): Graph = {
+		// TODO proper error handling and stuff
+		val (x :: xs) = Source.fromInputStream(graphStream, "UTF-8").getLines().toList
+		val top = x.split(" ")
+		val nodeCount = top(0).toInt
+		val edgeCount = top(1).toInt
 
+		val nodes = xs.take(nodeCount)
+			.foldRight(UndirectedGraph(): Graph) { (l, g) => g + Location(l.toInt) }
 
+		xs.slice(nodeCount, nodeCount + edgeCount).foldRight(nodes) { (l, g) =>
+			val edge = l.split(" ")
+			g + Edge(
+				Location(edge(0).toInt),
+				Location(edge(1).toInt),
+				Transport.fromString(edge(2)).get)
+		}
+
+	}
 
 
 	def startGame(initialBoard: Board): MrXRound = {
