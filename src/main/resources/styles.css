@@ -1,0 +1,95 @@
+#root {
+    -fx-base: #31363b;
+    -fx-background: #31363b;
+    -fx-control-inner-background: derive(#31363b, -10%);
+    /*-fx-font-size: 1.15em;*/
+}
+
+.round {
+}
+
+.round.shown {
+    -fx-border-radius: 50%;
+    -fx-border-color: white;
+    -fx-border-style: solid;
+    -fx-border-width: 2px;
+}
+
+.highlight {
+    -fx-opacity: 0.8;
+    -fx-fill: white;
+    -fx-effect: dropshadow(gaussian, white, 50, 0.5, 0, 0)
+}
+
+.hint {
+    -fx-stroke: lightseagreen;
+    -fx-stroke-width: 5px;
+    -fx-opacity: 0.8;
+    -fx-fill: transparent;
+}
+
+.hint-menu {
+    -fx-background-color: rgba(0, 0, 0, 0.8);
+}
+
+.counter {
+    -fx-stroke-type: outside;
+    -fx-stroke-width: 6px;
+    -fx-stroke: #edf0f3;
+    -fx-effect: dropshadow(gaussian, black, 6, 0.5, 0, 0);
+}
+
+.ticket {
+
+}
+
+.ticket .item {
+    -fx-border-width: 1px 0 0 0;
+    -fx-border-color: white;
+    -fx-padding: 5px 0 5px 0;
+}
+
+.ticket .item .counter-preview {
+    -fx-padding: 5px;
+}
+
+.ticket .item .amount {
+    -fx-font-family: monospace;
+}
+
+.ticket .item .location {
+    -fx-background-color: white;
+    -fx-text-fill: black;
+    -fx-border-width: 1px;
+    -fx-border-color: black;
+    -fx-padding: 0 3px 0 3px;
+    -fx-font-family: monospace;
+}
+
+
+
+.counter-black {
+    -fx-fill: derive(black, 10%);
+}
+
+.counter-red {
+    -fx-fill: derive(red, 10%);
+}
+
+.counter-green {
+    -fx-fill: derive(green, 10%);
+}
+
+.counter-blue {
+    -fx-fill: derive(blue, 10%);
+}
+
+.counter-yellow {
+    -fx-fill: derive(yellow, 10%);
+}
+
+.counter-white {
+    -fx-fill: derive(white, 10%);
+}
+
+

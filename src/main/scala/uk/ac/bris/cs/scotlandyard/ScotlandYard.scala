@@ -9,16 +9,13 @@ import scala.util.Try
 
 object ScotlandYard {
 
-
 	sealed trait Side
 	case object MrXSide extends Side
 	case object DetectiveSide extends Side
 
 	sealed trait Colour
-	sealed trait MrXColour extends Colour
 	sealed trait DetectiveColour extends Colour
-
-	final case object Black extends MrXColour
+	final case object Black extends Colour
 	final case object Red extends DetectiveColour
 	final case object Green extends DetectiveColour
 	final case object Blue extends DetectiveColour
@@ -70,29 +67,28 @@ object ScotlandYard {
 		def +(t: Ticket): Tickets = Tickets(map + (t -> (map.getOrElse(t, Amount.Zero) ++)))
 		def -(t: Ticket): Tickets = Tickets(map + (t -> (map.getOrElse(t, Amount.Zero) --)))
 		def ∈:(t: Ticket): Boolean = map.get(t).exists(_.notEmpty)
+		def ⊆:(ts: Seq[Ticket]): Boolean = {
+			ts.groupBy {identity}.forall { case (t, xs) => map(t).value >= xs.size }
+		}
 		def isEmpty: Boolean = map.isEmpty
 	}
 
 	final case class Location(value: Int) extends AnyVal
+	object Location {def @!(location: Int): Location = apply(location)}
+
 	type Graph = UndirectedGraph[Location, Transport]
 
-	sealed trait Player {
-		def location: Location
-		def tickets: Tickets
-		def colour: Colour
-	}
-	final case class MrX(location: Location, tickets: Tickets) extends Player {
-		val colour: Black.type = Black
-	}
-	final case class Detective(colour: DetectiveColour, location: Location, tickets: Tickets) extends Player
+	final case class Player[+C](colour: C,
+							   location: Location,
+							   tickets: Tickets)
 
 	sealed trait Move {def colour: Colour}
+	sealed trait NormalMove extends Move
 	sealed trait MrXMove extends Move
-	sealed trait DetectiveMove extends Move
 	final case class TicketMove(colour: Colour,
 								ticket: Ticket,
 								origin: Location,
-								destination: Location) extends DetectiveMove with MrXMove
+								destination: Location) extends NormalMove with MrXMove
 
 	final case class DoubleMove(colour: Black.type,
 								first: TicketMove,
@@ -101,15 +97,15 @@ object ScotlandYard {
 
 	trait Board {
 		def graph: Graph
-		def mrX: MrX
-		def detectives: Seq[Detective]
+		def lookup[C <: Colour](c: C): Option[Player[C]]
+		def mrX: Player[Black.type ]
+		def detectives: Seq[Player[DetectiveColour]]
 		def mrXTravelLog: MrXTravelLog
 		def pendingSide: Side
 		def computePossibleMoves(): Set[Move]
 		def computeWinner(): Option[Colour]
 		def progress(move: Move): Board
 	}
-
 
 	case class Row(visibility: Visibility, ticketAndLocation: Option[(Ticket, Location)])
 	case class MrXTravelLog(rows: Seq[Row], currentRound: Option[Int]) {
@@ -148,30 +144,16 @@ object ScotlandYard {
 			new MrXTravelLog(visibilities.map { v => Row(v, None) }, None)
 	}
 
-
-	sealed trait Round
-	sealed trait DetectiveRound extends Round
-	sealed trait MrXRound extends Round
-	final case class DetectiveSelect(board: Board, next: (DetectiveMove) => Round) extends DetectiveRound
-	final case class MrXSelect(board: Board, next: (MrXMove) => DetectiveRound) extends MrXRound
-	final case class MrXVictory(board: Board) extends MrXRound with DetectiveRound
-	final case class DetectiveVictory(board: Board) extends MrXRound with DetectiveRound
-
-	type Position = (Int, Int)
+	type Position = (Double, Double)
 
 	def readGraph(source: BufferedSource): Try[Graph] = Try {
-		// TODO proper error handling and stuff
 		val (first :: ls) = source.getLines().toList
-
 		val (nodeCount, edgeCount) = first.split(" ").toList match {
 			case node :: edge :: Nil => (node.toInt, edge.toInt)
 			case bad@_               => throw new IllegalArgumentException(s"Invalid format $bad")
 		}
-
 		val nodes = ls.take(nodeCount)
 			.foldRight(UndirectedGraph(): Graph) { (l, g) => g + Location(l.toInt) }
-
-
 		ls.slice(nodeCount, nodeCount + edgeCount).foldRight(nodes) { (l, g) =>
 			val edge = l.split(" ")
 			g + Edge(
@@ -182,44 +164,19 @@ object ScotlandYard {
 	}
 
 	def readMapLocations(source: BufferedSource): Try[Map[Location, Position]] = Try {
-		// TODO proper error handling and stuff
+		val (xOffset, yOffset) = (60.0, 60.0)
 		val (first :: ls) = source.getLines().toList
 		val posCount = first.toInt
 		ls.take(posCount)
 			.map {_.split(" ").toList}
 			.map {
-				case l :: x :: y :: Nil => (Location(l.toInt), (x.toInt, y.toInt))
+				case l :: x :: y :: Nil => (Location(l.toInt), (x.toInt + xOffset, y.toInt + yOffset))
 				case bad@_              => throw new IllegalArgumentException(s"Invalid format $bad")
 			}.toMap
 	}
 
 
-	def startGame(initialBoard: Board): MrXRound = {
 
-		def won(board: Board): Option[MrXRound with DetectiveRound] = {
-			board.computeWinner().collect {
-				case Black => MrXVictory(board)
-				case _     => DetectiveVictory(board)
-			}
-		}
-
-		def progressDetective(board: Board, move: DetectiveMove): Round = {
-			val next = board.progress(move)
-			won(next).getOrElse {
-				next.pendingSide match {
-					case MrXSide       => MrXSelect(board, progressMrX(board, _))
-					case DetectiveSide => DetectiveSelect(board, progressDetective(board, _))
-				}
-			}
-		}
-
-		def progressMrX(board: Board, move: MrXMove): DetectiveRound = {
-			val next = board.progress(move)
-			won(next).getOrElse(DetectiveSelect(next, progressDetective(next, _)))
-		}
-
-		won(initialBoard).getOrElse(MrXSelect(initialBoard, progressMrX(initialBoard, _)))
-	}
 
 }
 

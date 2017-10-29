@@ -1,5 +1,6 @@
 package uk.ac.bris.cs
 
+import uk.ac.bris.cs.RichMap._
 import uk.ac.bris.cs.UndirectedGraph.Edge
 
 
@@ -24,8 +25,8 @@ case class UndirectedGraph[N, E](
 	}
 
 	private def appendDirected(e: Edge[N, E]) = copy(
-		sourceEdges = UndirectedGraph.adjust(sourceEdges, e.source) {_ :+ e},
-		destinationEdges = UndirectedGraph.adjust(destinationEdges, e.target) {_ :+ e},
+		sourceEdges = sourceEdges.adjust(e.source) {_ :+ e},
+		destinationEdges = sourceEdges.adjust(e.target) {_ :+ e},
 		edges = edges :+ e
 	)
 
@@ -42,8 +43,6 @@ case class UndirectedGraph[N, E](
 
 object UndirectedGraph {
 
-	//https://stackoverflow.com/a/9004242/896997
-	def adjust[A, B](m: Map[A, B], k: A)(f: B => B): Map[A, B] = m.updated(k, f(m(k)))
 
 	def apply[N, E](): UndirectedGraph[N, E] =
 		new UndirectedGraph[N, E](Vector(), Vector(), Map(), Map())

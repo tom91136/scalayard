@@ -33,6 +33,6 @@ lazy val scalaYard = Project(
 			"org.scalafx" %% "scalafx" % "8.0.102-R11",
 			"org.scalafx" %% "scalafxml-core-sfx8" % "0.4",
 			"org.scalafx" %% "scalafxml-macwire-sfx8" % "0.4",
-			"net.kurobako.gesturefx" % "gesturefx" % "0.1.0",
+			"net.kurobako.gesturefx" % "gesturefx" % "0.2.0",
 		),
 	)
