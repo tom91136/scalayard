@@ -1,7 +1,10 @@
 package uk.ac.bris.cs
 
 import javafx.scene.{Node, Parent}
+import javafx.util.Duration
 
+import scalafx.animation.{FadeTransition, Interpolator}
+import scalafx.Includes._
 import scalafx.beans.value.ObservableValue
 import scalafx.event.subscriptions.Subscription
 
@@ -28,5 +31,16 @@ object RichScalaFX {
 				an(p, n)
 				n
 		}
+
+	import scalafx.scene.{Node => SNode}
+	implicit class fadeInTransition[+N <: SNode](value: N) {
+		def fadeIn(from: Double, to: Double, duration: Duration): Unit = {
+			new FadeTransition(duration, value) {
+				interpolator = Interpolator.EaseBoth
+				fromValue = from
+				toValue = to
+			}.play()
+		}
+	}
 
 }

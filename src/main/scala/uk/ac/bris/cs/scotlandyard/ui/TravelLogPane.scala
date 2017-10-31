@@ -1,8 +1,8 @@
-package uk.ac.bris.cs.scotlandyard
+package uk.ac.bris.cs.scotlandyard.ui
 
 import uk.ac.bris.cs.RichScalaFX._
 import uk.ac.bris.cs.scotlandyard.ScotlandYard._
-import uk.ac.bris.cs.scotlandyard.TravelLogPane._
+import uk.ac.bris.cs.scotlandyard.ui.TravelLogPane._
 
 import scalafx.beans.property.ObjectProperty
 import scalafx.collections.ObservableBuffer

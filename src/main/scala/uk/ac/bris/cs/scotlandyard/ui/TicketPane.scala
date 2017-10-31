@@ -1,9 +1,8 @@
-package uk.ac.bris.cs.scotlandyard
-
+package uk.ac.bris.cs.scotlandyard.ui
 
 import uk.ac.bris.cs.RichScalaFX._
-import uk.ac.bris.cs.scotlandyard.BoardPane.CounterClasses
 import uk.ac.bris.cs.scotlandyard.ScotlandYard._
+import uk.ac.bris.cs.scotlandyard.ui.BoardPane.CounterClasses
 
 import scalafx.collections.ObservableBuffer
 import scalafx.geometry.{Orientation, Pos}

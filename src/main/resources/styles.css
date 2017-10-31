@@ -18,18 +18,29 @@
 .highlight {
     -fx-opacity: 0.8;
     -fx-fill: white;
-    -fx-effect: dropshadow(gaussian, white, 50, 0.5, 0, 0)
+    -fx-effect: dropshadow(gaussian, white, 20, 0.5, 0, 0)
 }
 
-.hint {
-    -fx-stroke: lightseagreen;
-    -fx-stroke-width: 5px;
-    -fx-opacity: 0.8;
+.hint-circle {
+    -fx-stroke-width: 7px;
+    -fx-opacity: 0.6;
     -fx-fill: transparent;
 }
 
+
+#aa{
+    -fx-padding: 100px;
+
+}
 .hint-menu {
     -fx-background-color: rgba(0, 0, 0, 0.8);
+}
+
+.hint-menu-item {
+    -fx-opacity: 0.5;
+    -fx-border-width: 1px 0 0 0;
+    -fx-border-color: white;
+    -fx-padding: 100px;
 }
 
 .counter {
@@ -65,8 +76,6 @@
     -fx-padding: 0 3px 0 3px;
     -fx-font-family: monospace;
 }
-
-
 
 .counter-black {
     -fx-fill: derive(black, 10%);

@@ -5,7 +5,7 @@ lazy val scalaYard = Project(
 	.settings(
 		name := "scalayard",
 		version := "0.1.0-SNAPSHOT",
-		scalaVersion := "2.12.3",
+		scalaVersion := "2.12.4",
 		scalacOptions ++= Seq(
 			"-target:jvm-1.8",
 			"-encoding", "UTF-8",
