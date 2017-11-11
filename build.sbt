@@ -29,6 +29,7 @@ lazy val scalaYard = Project(
 			Resolver.jcenterRepo,
 			"Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 		),
+		mainClass in assembly := Some("uk.ac.bris.cs.Main"),
 		libraryDependencies ++= Seq(
 			"org.scalafx" %% "scalafx" % "8.0.102-R11",
 			"org.scalafx" %% "scalafxml-core-sfx8" % "0.4",
