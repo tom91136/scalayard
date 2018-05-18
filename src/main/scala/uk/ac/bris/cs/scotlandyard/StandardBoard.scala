@@ -14,8 +14,6 @@ final case class StandardBoard(graph: Graph,
 	private val everyone : Seq[Player[Colour]]         = detectives :+ mrX
 	private val playerMap: Map[Colour, Player[Colour]] = everyone.map { d => (d.colour, d) }(breakOut)
 
-	override def lookup[C <: Colour](c: C): Option[Player[C]] = playerMap.get(c).map {_.asInstanceOf[Player[C]]}
-
 	private def computePossibleMoves(player: Player[Colour]): Seq[Move] = {
 
 		def mkMovesFrom(source: Location, p: Player[Colour]): Seq[TicketMove] = for {

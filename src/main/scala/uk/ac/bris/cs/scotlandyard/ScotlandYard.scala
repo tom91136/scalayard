@@ -145,7 +145,6 @@ object ScotlandYard {
 	/** Concept of a game board that is essentially the state of the game in any given player's mind */
 	trait Board {
 		def graph: Graph
-		def lookup[C <: Colour](c: C): Option[Player[C]]
 		def mrX: Player[Black.type]
 		def detectives: Seq[Player[DetectiveColour]]
 		def mrXTravelLog: MrXTravelLog
@@ -199,7 +198,7 @@ object ScotlandYard {
 	type Position = (Double, Double)
 
 	def readGraph(source: BufferedSource): Try[Graph] = Try {
-		val (first :: ls) = source.getLines().toList
+		val first :: ls = source.getLines().toList
 		val (nodeCount, edgeCount) = first.split(" ").toList match {
 			case node :: edge :: Nil => (node.toInt, edge.toInt)
 			case bad@_               => throw new IllegalArgumentException(s"Invalid format $bad")
@@ -217,7 +216,7 @@ object ScotlandYard {
 
 	def readMapLocations(source: BufferedSource): Try[Map[Location, Position]] = Try {
 		val (xOffset, yOffset) = (60.0, 60.0)
-		val (first :: ls) = source.getLines().toList
+		val first :: ls = source.getLines().toList
 		val posCount = first.toInt
 		ls.take(posCount)
 			.map {_.split(" ").toList}

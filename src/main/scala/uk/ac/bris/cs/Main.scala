@@ -1,9 +1,15 @@
 package uk.ac.bris.cs
 
-import javafx.util.Duration
-
 import net.kurobako.gesturefx.GesturePane
 import net.kurobako.gesturefx.GesturePane.FitMode
+import scalafx.Includes._
+import scalafx.animation.{FadeTransition, Interpolator, ParallelTransition, ScaleTransition}
+import scalafx.application.{JFXApp, Platform}
+import scalafx.geometry.Point2D
+import scalafx.scene.control.{CheckMenuItem, Menu, MenuBar, MenuItem}
+import scalafx.scene.image.Image
+import scalafx.scene.layout._
+import scalafx.scene.{Node, Scene}
 import uk.ac.bris.cs.Trampoline.Eval.{apply => _, unapply => _}
 import uk.ac.bris.cs.scotlandyard.ScotlandYard.Location._
 import uk.ac.bris.cs.scotlandyard.ScotlandYard._
@@ -11,14 +17,6 @@ import uk.ac.bris.cs.scotlandyard._
 import uk.ac.bris.cs.scotlandyard.ui.{BoardPane, MoveSelectPane, TicketPane, TravelLogPane}
 
 import scala.io.Source
-import scalafx.Includes._
-import scalafx.animation.{FadeTransition, Interpolator, ParallelTransition, ScaleTransition}
-import scalafx.application.{JFXApp, Platform}
-import scalafx.geometry.{Point2D, Pos}
-import scalafx.scene.{Node, Scene}
-import scalafx.scene.control.{CheckMenuItem, Menu, MenuBar, MenuItem}
-import scalafx.scene.image.Image
-import scalafx.scene.layout._
 
 object Main extends JFXApp {
 

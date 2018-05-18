@@ -1,20 +1,17 @@
 package uk.ac.bris.cs.scotlandyard.ui
 
 
-import uk.ac.bris.cs.RichScalaFX.{fadeInTransition, findOrMkUnsafe, propertyToOption}
-import uk.ac.bris.cs.scotlandyard.ScotlandYard._
-import uk.ac.bris.cs.scotlandyard.ui.BoardPane._
-
 import scalafx.Includes._
 import scalafx.beans.property.ReadOnlyDoubleProperty
-import scalafx.geometry.{Insets, Pos, Side}
-import scalafx.scene.Node
-import scalafx.scene.control.{ContextMenu, Label, MenuItem}
+import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.effect.BlendMode
 import scalafx.scene.image.{Image, ImageView}
 import scalafx.scene.layout._
 import scalafx.scene.paint.{Color, CycleMethod, LinearGradient, Stop}
-import scalafx.scene.shape.{Circle, Rectangle}
+import scalafx.scene.shape.Circle
+import uk.ac.bris.cs.RichScalaFX.{fadeInTransition, findOrMkUnsafe}
+import uk.ac.bris.cs.scotlandyard.ScotlandYard._
+import uk.ac.bris.cs.scotlandyard.ui.BoardPane._
 
 class BoardPane(val map: Image,
 				val locationPositions: Map[Location, Position],
@@ -96,7 +93,7 @@ class BoardPane(val map: Image,
 				val width = 1.0 / cs.size
 				val stops: Seq[Stop] = for {
 					(c, i) <- cs.zipWithIndex
-					from = Stop(i.toFloat / cs.size, c)
+					from = Stop(i.toDouble / cs.size, c)
 					stop <- Seq(from, Stop(from.offset + (width - 0.001), c))
 				} yield stop
 				LinearGradient(0, 0, 1, 0, true, CycleMethod.NoCycle, stops: _*)
@@ -131,7 +128,7 @@ class BoardPane(val map: Image,
 
 
 			val tkds = ss.map {
-				case MoveSelection(m, ss@(_ :+ ((_, s)) :+ ((_, l)))) => (ss.map {_._1}, angleDeg(locationPositions(s), locationPositions(l)))
+				case MoveSelection(_, ss@(_ :+ ((_, s)) :+ ((_, l)))) => (ss.map {_._1}, angleDeg(locationPositions(s), locationPositions(l)))
 				case MoveSelection(m, _ :+ ((t, l)))                  =>
 					println(s"$m ${m.origin} => $l")
 					(Seq(t), angleDeg(locationPositions(m.origin), locationPositions(l)))
@@ -145,25 +142,25 @@ class BoardPane(val map: Image,
 					val cc = t match {
 						case TaxiTicket        => Color.Yellow
 						case BusTicket         => Color.Teal
-						case UndergroundTicket =>Color.Red
+						case UndergroundTicket => Color.Red
 						case SecretTicket      => Color.Black
-						case DoubleTicket      =>Color.Maroon
+						case DoubleTicket      => Color.Maroon
 					}
 
-					new Circle(){
+					new Circle() {
 						fill = cc
 						radius = 8
 						opacity = 0.8
 						padding = Insets(-10)
 					}
-//					new ImageView(ticketImages(t)){
-//					rotate = 90
-//					fitWidth = 20
-//					opacity = 0.8
-//					preserveRatio = true
-//				}
-			}
-				rotate =  deg-90
+					//					new ImageView(ticketImages(t)){
+					//					rotate = 90
+					//					fitWidth = 20
+					//					opacity = 0.8
+					//					preserveRatio = true
+					//				}
+				}
+				rotate = deg - 90
 				mouseTransparent = true
 			}
 			}
@@ -172,7 +169,7 @@ class BoardPane(val map: Image,
 				translateX <== -width / 2 + x
 				translateY <== -height / 2 + y
 				alignment = Pos.TopLeft
-				children =    Seq(c) ++ddd
+				children = Seq(c) ++ ddd
 			}
 		}
 
